@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام النواقص والطلبيات السحابي الموحد</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        body { 
+            background-color: #cbd5e1; 
+            color: #1e293b; 
+            margin: 0; 
+            padding: 12px; 
+            font-size: 13px; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+        }
+        
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            flex: 1; 
+            width: 100%; 
+        }
+
+        /* الهيدر العلوي المتطابق */
+        .header { 
+            background: linear-gradient(135deg, #2e1a47, #3b205c); 
+            color: white; 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            margin-bottom: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 { margin: 0; font-size: 15px; font-weight: 700; color: #f8fafc; }
+
+        .branch-btn-zone {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-view-data {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .branch-selector { 
+            background: #1e3a8a; 
+            color: white;
+            padding: 5px 15px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            border: none;
+        }
+
+        /* تقسيم الشاشة المتطابق */
+        .main-layout { 
+            display: grid; 
+            grid-template-columns: 1.1fr 2fr; 
+            gap: 15px; 
+        }
+        
+        @media (max-width: 1024px) { 
+            .main-layout { grid-template-columns: 1fr; } 
+        }
+
+        .card { 
+            background: #f8fafc; 
+            padding: 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; 
+            margin-bottom: 15px; 
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            margin-top: 0;
+            margin-bottom: 12px;
+            text-align: right;
+        }
+
+        /* منطقة المسودة الجانبية */
+        .draft-textarea {
+            width: 100%;
+            height: 180px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            resize: none;
+            background-color: #fff;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        /* عناصر الاستمارات */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .form-group { margin-bottom: 10px; text-align: right; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 11px; color: #475569; }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 8px 10px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            font-size: 12px; 
+            background-color: #fff; 
+            text-align: right;
+        }
+        
+        .form-control:focus { outline: none; border-color: #2563eb; }
+
+        /* الأزرار المتطابقة لتقريرك */
+        .btn { 
+            width: 100%; 
+            padding: 10px; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px; 
+            font-size: 12px; 
+            transition: all 0.2s;
+        }
+        
+        .btn-insert { background-color: #15803d; color: white; margin-top: 5px; }
+        .btn-insert:hover { background-color: #166534; }
+        .btn-whatsapp { background-color: #1e3a8a; color: white; margin-bottom: 8px; }
+        .btn-clear { background-color: #334155; color: white; }
+
+        /* صندوق الإحصائيات ثلاثي الأعمدة */
+        .stats-row { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+        
+        .stat-card { 
+            background: #fff; 
+            border: 1px solid #e2e8f0; 
+            padding: 8px; 
+            text-align: center; 
+            border-radius: 8px; 
+        }
+        
+        .stat-card .value { font-size: 16px; font-weight: 700; color: #1e293b; display: block; }
+        .stat-card .label { font-size: 10px; color: #64748b; font-weight: 600; }
+
+        /* أزرار الفلترة */
+        .filter-bar { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 4px; 
+            margin-bottom: 15px; 
+            background: #fff;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .filter-pill { 
+            padding: 4px 10px; 
+            border: 1px solid #e2e8f0; 
+            background: #f1f5f9; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            color: #475569;
+        }
+        
+        .filter-pill.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+
+        /* جدول الـ 6 أعمدة المتطابق للفحص */
+        .table-responsive { overflow-x: auto; background: white; border-radius: 8px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 12px; }
+        th { background-color: #f8fafc; padding: 8px 10px; font-weight: 600; border-bottom: 2px solid #e2e8f0; color: #475569; }
+        td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:hover { background-color: #f8fafc; }
+
+        .badge-status { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+        .status-out { background-color: #fee2e2; color: #991b1b; }
+        .status-risk { background-color: #fef3c7; color: #92400e; }
+        
+        .btn-delete { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 11px; font-weight: bold; }
+
+        /* الفوتر الاحترافي والمتطابق وشامل الأنظمة المذكورة */
+        .footer { text-align: center; margin-top: auto; padding: 15px; font-size: 11px; color: #475569; border-top: 1px solid #cbd5e1; }
+        .sys-compatibility { display: flex; justify-content: center; gap: 12px; margin-top: 6px; font-size: 10px; color: #64748b; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- الهيدر الموحد -->
+    <div class="header">
+        <h1>نظام النواقص والطلبيات السحابي الموحد</h1>
+        <div class="branch-btn-zone">
+            <span class="btn-view-data">عرض بيانات:</span>
+            <select class="branch-selector" id="branchSelect">
+                <option value="صيدلية الفارابي 1">صيدلية الفارابي 1</option>
+                <option value="صيدلية الفارابي 7" selected>صيدلية الفارابي 7</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- شبكة التوزيع الرئيسية -->
+    <div class="main-layout">
+        
+        <!-- العمود الأيمن الجانبي: المسودة والتحكم -->
+        <div class="side-panel">
+            <div class="card">
+                <div class="card-title">مسودة طلبية الفرع الجاهزة</div>
+                <textarea id="draftArea" class="draft-textarea" placeholder="ستظهر الأصناف المضافة هنا تلقائيًا بتنسيق مجمع لسهولة المراجعة والتدقيق..."></textarea>
+                
+                <button class="btn btn-whatsapp" onclick="copyToWhatsApp()">📋 نسخ جدول الفرع للواتساب</button>
+                <button class="btn btn-clear" onclick="clearSystemData()">🗑️ تصفية وإفراغ قائمة هذا الفرع بالكامل</button>
+            </div>
+        </div>
+
+        <!-- العمود الأيسر الأساسي: واجهة الإدخال والجدول الشامل -->
+        <div class="main-panel">
+            <div class="card">
+                <div class="card-title" id="formDynamicTitle">إضافة صنف ناقص جديد سريع لـ (صيدلية الفارابي 7)</div>
+                
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>اسم الدواء / الصنف</label>
+                        <input type="text" id="medName" class="form-control" placeholder="مثال: Panadol Extra">
+                    </div>
+                    <div class="form-group">
+                        <label>الكمية المطلوبة</label>
+                        <input type="number" id="medQty" class="form-control" value="1" min="1">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>حالة المخزون (Stock Status)</label>
+                        <select id="stockStatus" class="form-control">
+                            <option value="Out of Stock">Out of Stock ❌</option>
+                            <option value="Shortage Risk">Shortage Risk ⚠️</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حركة البيع (Sales Movement)</label>
+                        <select id="salesMovement" class="form-control">
+                            <option value="Fast Moving">Fast Moving 🔥</option>
+                            <option value="Normal">Normal 📦</option>
+                            <option value="Slow Moving">Slow Moving 🐢</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>المجموعة التصنيفية والبيعوية</label>
+                        <select id="medCategory" class="form-control">
+                            <option value="أدوية عامة">أدوية عامة</option>
+                            <option value="General Medicine">General Medicine</option>
+                            <option value="Cosmetics">Cosmetics</option>
+                            <option value="Cosmeceuticals">Cosmeceuticals</option>
+                            <option value="Baby Care">Baby Care</option>
+                            <option value="Medical Supplies">Medical Supplies</option>
+                            <option value="Medical Devices">Medical Devices</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الباركود (اختياري)</label>
+                        <input type="text" id="medBarcode" class="form-control" placeholder="أدخل الباركود أو امسحه">
+                    </div>
+                </div>
+
+                <button class="btn btn-insert" onclick="processNewItemInsertion()">➕ إدراج وحفظ في السحابة للفرع المحدد</button>
+            </div>
+
+            <!-- لوحة المراقبة والإحصائيات -->
+            <div class="card" style="padding-bottom: 5px;">
+                <div class="card-title">قائمة شورتات الفرع الحالية المكتشفة</div>
+                
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <span class="value" id="countTotal">0</span>
+                        <span class="label">إجمالي نواقص الفرع</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="value" id="countOut" style="color: #b91c1c;">0</span>
+                        <span class="label">❌ Out of Stock</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="value" id="countFast" style="color: #d97706;">0</span>
+                        <span class="label">🔥 Fast Moving</span>
+                    </div>
+                </div>
+
+                <!-- أشرطة فلاتر العرض المتطابقة بالكامل -->
+                <div class="filter-bar">
+                    <span class="filter-pill active" onclick="applyGridFilter('All', this)">All</span>
+                    <span class="filter-pill" onclick="applyGridFilter('Fast Moving', this)">🔥 Fast Moving</span>
+                    <span class="filter-pill" onclick="applyGridFilter('Out of Stock', this)">❌ Out of Stock</span>
+                    <span class="filter-pill" onclick="applyGridFilter('General Medicine', this)">General Medicine</span>
+                    <span class="filter-pill" onclick="applyGridFilter('Cosmetics', this)">Cosmetics</span>
+                    <span class="filter-pill" onclick="applyGridFilter('Cosmeceuticals', this)">Cosmeceuticals</span>
+                    <span class="filter-pill" onclick="applyGridFilter('Baby Care', this)">Baby Care</span>
+                    <span class="filter-pill" onclick="applyGridFilter('Medical Supplies', this)">Medical Supplies</span >
+                    <span class="filter-pill" onclick="applyGridFilter('Medical Devices', this)">Medical Devices</span>
+                </div>
+
+                <!-- جدول العرض الرئيسي بـ 6 أعمدة كاملة ومطابقة -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم الصنف</th>
+                                <th>الكمية</th>
+                                <th>حركة البيع</th>
+                                <th>حالة المخزون</th>
+                                <th>الباركود</th>
+                                <th>المجموعة</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryGridBody">
+                            <!-- تدرج الصفوف ديناميكياً من السورس المالي -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- التذييل الموثق بالكامل شاملاً الأنظمة والحقوق المطلوبة -->
+    <div class="footer">
+        <div>جميع الحقوق محفوظة © د. كريم الألفي | Powered by Dr. Karim Elalfi</div>
+        <div class="sys-compatibility">
+            <span>النظام متوافق مع:</span>
+            <span>💻 Windows</span>
+            <span>🐧 Linux Mint / Ubuntu</span>
+            <span>🤖 Android (APK/Web)</span>
+            <span>🍏 iOS & macOS</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // الحاوية الديناميكية الأساسية لحفظ النواقص
+    let globalInventoryItems = [];
+    let activeGridFilter = 'All';
+
+    window.onload = function() {
+        initLocalStorageState();
+        syncDataFromCloudBackend();
+        
+        // استماع ديناميكي لتغيير الفرع لتحديث العنوان
+        document.getElementById('branchSelect').addEventListener('change', function(e) {
+            document.getElementById('formDynamicTitle').innerText = `إضافة صنف ناقص جديد سريع لـ (${e.target.value})`;
+        });
+    };
+
+    // ==========================================
+    // ⚙️ مهيأ الربط البرمجي التلقائي مع أي سيستم (n8n / REST APIs)
+    // ==========================================
+    
+    // 1. الاتصال بقاعدة البيانات السحابية (مجهز بالكامل للـ API الخاص بـ RestDB)
+    async function syncDataFromCloudBackend() {
+        const CONFIG_API_URL = 'https://farabi7shorts-719f.restdb.io/rest/shorts';
+        const CONFIG_API_KEY = '65ba48f4270847c29827aef8'; 
+
+        try {
+            const response = await fetch(CONFIG_API_URL, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-apikey': CONFIG_API_KEY
+                }
+            });
+            if (response.ok) {
+                const cloudData = await response.json();
+                if (cloudData && cloudData.length > 0) {
+                    globalInventoryItems = cloudData;
+                    refreshApplicationState();
+                }
+            }
+        } catch (err) {
+            console.warn("السيرفر السحابي غير مستجيب، يتم التشغيل الآمن بالاعتماد على التخزين المحلي للمتصفح.", err);
+        }
+    }
+
+    // 2. معالج إرسال البيانات المطور للربط مع n8n أو أي ويب هوك خارجي (Webhook Client)
+    async function postItemToExternalSystems(payload) {
+        // 💡 دكتور كريم: يمكنك استبدال هذا الرابط برابط الـ Webhook الخاص بـ n8n المستضاف على الدوكر لديك
+        const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/pharmacy-shorts'; 
+        const RESTDB_API_URL = 'https://farabi7shorts-719f.restdb.io/rest/shorts';
+        const RESTDB_KEY = '65ba48f4270847c29827aef8';
+
+        // محاولة الحفظ السحابي
+        try {
+            await fetch(RESTDB_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-apikey': RESTDB_KEY },
+                body: JSON.stringify(payload)
+            });
+        } catch(e) { console.error("فشل الاتصال بـ RestDB سحابياً"); }
+
+        // محاولة الإرسال المتوازي للأتمتة (n8n Automation)
+        try {
+            await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch(e) { console.info("محاولة إرسال متوازية لـ n8n (نظام الأتمتة المحلي غير مربوط حالياً)."); }
+    }
+
+    // ==========================================
+    // 🧠 وظائف المعالجة والعرض المحمية من التجميد
+    // ==========================================
+
+    async function processNewItemInsertion() {
+        const nameInput = document.getElementById('medName').value.trim();
+        if (!nameInput) {
+            alert("⚠️ خطأ: يرجى كتابة اسم الدواء أو الصنف أولاً قبل الإدراج.");
+            return;
+        }
+
+        const newItemPayload = {
+            id: 'item_' + Date.now(),
+            name: nameInput,
+            quantity: document.getElementById('medQty').value || "1",
+            stockStatus: document.getElementById('stockStatus').value,
+            salesMovement: document.getElementById('salesMovement').value,
+            category: document.getElementById('medCategory').value,
+            barcode: document.getElementById('medBarcode').value.trim() || "لا يوجد",
+            branch: document.getElementById('branchSelect').value,
+            timestamp: new Date().toISOString()
+        };
+
+        // خطة الإنقاذ: الإدراج الفوري في المصفوفة لضمان استمرارية العمل وعدم تجميد الواجهة
+        globalInventoryItems.push(newItemPayload);
+        refreshApplicationState();
+
+        // إرسال الخلفية للنظم الخارجية دون تعطيل الطبيب في الإدخال اللاحق
+        await postItemToExternalSystems(newItemPayload);
+
+        // تصفية الخانات لتجهيزها للصنف القادم وسرعة الحركة
+        document.getElementById('medName').value = '';
+        document.getElementById('medBarcode').value = '';
+        document.getElementById('medName').focus();
+    }
+
+    function refreshApplicationState() {
+        updateLocalStorageState();
+        renderInventoryGrid();
+        rebuildDraftTextArea();
+    }
+
+    function renderInventoryGrid() {
+        const gridBody = document.getElementById('inventoryGridBody');
+        gridBody.innerHTML = '';
+
+        let filteredSet = globalInventoryItems;
+        if (activeGridFilter !== 'All') {
+            filteredSet = globalInventoryItems.filter(item => 
+                item.salesMovement === activeGridFilter || 
+                item.stockStatus === activeGridFilter || 
+                item.category === activeGridFilter
+            );
+        }
+
+        filteredSet.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            const badgeClass = item.stockStatus === 'Out of Stock' ? 'badge-status status-out' : 'badge-status status-risk';
+            const textHighlight = item.salesMovement === 'Fast Moving' ? 'color: #b91c1c; font-weight: bold;' : '';
+
+            tr.innerHTML = `
+                <td style="${textHighlight}">${item.name}</td>
+                <td><strong>${item.quantity}</strong></td>
+                <td>${item.salesMovement}</td>
+                <td><span class="${badgeClass}">${item.stockStatus}</span></td>
+                <td style="color: #64748b; font-family: monospace;">${item.barcode}</td>
+                <td>${item.category}</td>
+                <td><button class="btn-delete" onclick="deleteTargetItem('${item.id}')">❌</button></td>
+            `;
+            gridBody.appendChild(tr);
+        });
+
+        calculateLiveDashboardMetrics();
+    }
+
+    function rebuildDraftTextArea() {
+        const textarea = document.getElementById('draftArea');
+        if (globalInventoryItems.length === 0) {
+            textarea.value = '';
+            return;
+        }
+
+        let draftText = `📝 مسودة طلبية ونواقص الفرع الحالية:\n`;
+        globalInventoryItems.forEach((item, index) => {
+            draftText += `[${index + 1}] صنف: ${item.name} | كمية: ${item.quantity} | باركود: ${item.barcode} | حركة: ${item.salesMovement}\n`;
+        });
+        textarea.value = draftText;
+    }
+
+    function calculateLiveDashboardMetrics() {
+        document.getElementById('countTotal').innerText = globalInventoryItems.length;
+        document.getElementById('countOut').innerText = globalInventoryItems.filter(i => i.stockStatus === 'Out of Stock').length;
+        document.getElementById('countFast').innerText = globalInventoryItems.filter(i => i.salesMovement === 'Fast Moving').length;
+    }
+
+    function applyGridFilter(filterValue, element) {
+        activeGridFilter = filterValue;
+        document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+        element.classList.add('active');
+        renderInventoryGrid();
+    }
+
+    function deleteTargetItem(itemId) {
+        globalInventoryItems = globalInventoryItems.filter(item => item.id !== itemId);
+        refreshApplicationState();
+    }
+
+    function copyToWhatsApp() {
+        if (globalInventoryItems.length === 0) {
+            alert("⚠️ القائمة فارغة حالياً، لا توجد بيانات كافية لنسخها وإرسالها.");
+            return;
+        }
+
+        const selectedBranch = document.getElementById('branchSelect').value;
+        let outputMessage = `📦 *تقرير شورتات ونواقص مجمع وموثق*\n`;
+        outputMessage += `🏢 الفرع المرصود: *${selectedBranch}*\n`;
+        outputMessage += `📅 تاريخ الرصد: ${new Date().toLocaleDateString('ar-EG')}\n`;
+        outputMessage += `-------------------------------------------\n`;
+
+        globalInventoryItems.forEach((item, idx) => {
+            outputMessage += `*${idx + 1}. ${item.name}* \n   🔹 الكمية المطلوبة: ${item.quantity}\n   🔹 الباركود: \`${item.barcode}\` \n   🔹 تصنيفه: ${item.category} | [${item.stockStatus}] (${item.salesMovement})\n\n`;
+        });
+
+        outputMessage += `-------------------------------------------\n`;
+        outputMessage += `👨‍⚕️ تم إعداد التقرير بواسطة: د. كريم الألفي`;
+
+        navigator.clipboard.writeText(outputMessage).then(() => {
+            alert("📋 تم نسخ جدول الفرع بالكامل بالتنسيق المعتمد! يمكنك الآن التوجه للواتساب وعمل لصق (Paste) للمسؤولين.");
+        }).catch(() => {
+            alert("خطأ في النسخ التلقائي للمتصفح، يرجى النسخ اليدوي من مربع المسودة الجانبي.");
+        });
+    }
+
+    function clearSystemData() {
+        if (confirm("❓ تحذير: هل أنت متأكد من رغبتك في تصفية وإفراغ القائمة وبدء بيان رصد نواقص جديد؟")) {
+            globalInventoryItems = [];
+            refreshApplicationState();
+        }
+    }
+
+    // محركات الحفظ الموضعي لعدم فقدان التقرير عند التحديث المفاجئ
+    function updateLocalStorageState() { localStorage.setItem('dr_karim_unified_inventory', JSON.stringify(globalInventoryItems)); }
+    function initLocalStorageState() {
+        const localSavedData = localStorage.getItem('dr_karim_unified_inventory');
+        if (localSavedData) { globalInventoryItems = JSON.parse(localSavedData); refreshApplicationState(); }
+    }
+</script>
+
+</body>
+</html>
