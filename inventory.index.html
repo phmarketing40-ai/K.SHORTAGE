@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام إدارة النواقص السحابي الموحد - الفروع التسعة</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f8fafc; color: #1e293b; margin: 0; padding: 10px; font-size: 14px; display: flex; flex-direction: column; min-height: 100vh; }
+        .container { max-width: 1300px; margin: 0 auto; flex: 1; width: 100%; }
+        
+        .header { background: linear-gradient(135deg, #1e3a8a, #1e40af); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.15); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header h1 { margin: 0; font-size: 16px; font-weight: 700; }
+        
+        .branch-selector-zone { background: #2563eb; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; color: white; }
+        .branch-select-hd { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 3px 8px; font-weight: bold; cursor: pointer; outline: none; }
+        
+        .main-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 15px; }
+        @media (max-width: 950px) { .main-grid { grid-template-columns: 1fr; } }
+        
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        h2 { font-size: 14px; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; color: #0f172a; display: flex; justify-content: space-between; align-items: center; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; }
+        .stat-box .num { font-size: 18px; font-weight: 700; color: #1e3a8a; display: block; }
+        .stat-box .lbl { font-size: 11px; color: #64748b; font-weight: 600; }
+
+        .filter-container { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #e2e8f0; font-family: sans-serif; direction: ltr; justify-content: flex-end; }
+        .filter-btn { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; color: #475569; transition: 0.2s; font-family: inherit; }
+        .filter-btn:hover { background: #e2e8f0; }
+        .filter-btn.active { background: #1e40af; color: white; border-color: #1e40af; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff; width: 100%; appearance: none; -webkit-appearance: none; }
+        input:focus, select:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        .row-top { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+        .row-bottom { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        @media (max-width: 550px) { .row-bottom { grid-template-columns: 1fr; } }
+
+        .btn-add { background: #10b981; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.2s; font-size: 14px; margin-top: 5px; }
+        .btn-add:hover { background: #059669; }
+
+        .table-container { overflow-x: auto; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 650px; }
+        th, td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px; }
+        .barcode-text { font-family: monospace; color: #64748b; font-size: 12px; }
+        .qty-badge { background: #eff6ff; color: #1e40af; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #bfdbfe; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; display: inline-block; }
+        .status-danger { background: #fee2e2; color: #991b1b; }
+        .status-warning { background: #ffedd5; color: #9a3412; }
+        .status-info { background: #fef9c3; color: #713f12; }
+        
+        .sale-badge { padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; display: inline-block; }
+        .sale-fast { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+        .sale-mid { background: #f0f9ff; color: #075985; border: 1px solid #bae6fd; }
+        .sale-slow { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        
+        .btn-delete { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: 600; font-size: 13px; padding: 5px; }
+        
+        textarea { width: 100%; height: 350px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; font-size: 12px; resize: none; background: #f8fafc; color: #334155; margin-bottom: 10px; }
+        .btn-action { background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; display: flex; justify-content: center; align-items: center; gap: 5px; font-size: 14px; }
+        .btn-action:hover { background: #1d4ed8; }
+        .btn-clear { background: #64748b; margin-top: 8px; }
+        .btn-clear:hover { background: #475569; }
+        
+        .select-custom { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23475569" d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: left 10px center; background-size: 18px; }
+        
+        .footer { text-align: center; padding: 15px; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0; margin-top: auto; font-weight: 600; line-height: 1.6; }
+        .footer span { color: #1e40af; font-weight: 700; }
+        .sys-compatibility { display: flex; justify-content: center; gap: 15px; font-size: 11px; color: #94a3b8; margin-top: 5px; font-weight: normal; }
+        .sys-badge { background: #f1f5f9; padding: 2px 8px; border-radius: 12px; border: 1px solid #e2e8f0; color: #475569; font-weight: 600; }
+        
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; font-weight: bold; color: #1e3a8a; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">جاري تحديث البيانات سحابياً... ☁️</div>
+
+<div class="container">
+    <div class="header">
+        <h1>نظام النواقص والطلبيات السحابي الموحد</h1>
+        <div class="branch-selector-zone">
+            📍 عرض بيانات: 
+            <select id="current-branch-hd" class="branch-select-hd" onchange="switchBranch()">
+                <option value="صيدلية الفارابي 1">صيدلية الفارابي 1</option>
+                <option value="صيدلية الفارابي 2">صيدلية الفارابي 2</option>
+                <option value="صيدلية الفارابي 3">صيدلية الفارابي 3</option>
+                <option value="صيدلية الفارابي 4">صيدلية الفارابي 4</option>
+                <option value="صيدلية الفارابي 5">صيدلية الفارابي 5</option>
+                <option value="صيدلية الفارابي 6">صيدلية الفارابي 6</option>
+                <option value="صيدلية الفارابي 7" selected>صيدلية الفارابي 7</option>
+                <option value="صيدلية الفارابي 8">صيدلية الفارابي 8</option>
+                <option value="صيدلية الفارابي 9">صيدلية الفارابي 9</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="main-column" style="display: flex; flex-direction: column; gap: 15px;">
+            <div class="card">
+                <h2>إضافة صنف ناقص جديد سريع (<span id="form-branch-title" style="color:#2563eb;">صيدلية الفارابي 7</span>)</h2>
+                
+                <div class="row-top">
+                    <div class="form-group">
+                        <label>اسم الدواء / الصنف</label>
+                        <input type="text" id="prod-name" placeholder="مثال: Panadol Extra">
+                    </div>
+                    <div class="form-group">
+                        <label>الكمية</label>
+                        <input type="number" id="prod-qty" value="1" min="1">
+                    </div>
+                </div>
+                
+                <div class="row-bottom">
+                    <div class="form-group">
+                        <label>الباركود (اختياري)</label>
+                        <input type="text" id="prod-barcode" placeholder="أدخل الباركود">
+                    </div>
+                    <div class="form-group">
+                        <label>حالة المخزون (Stock Status)</label>
+                        <select id="prod-status" class="select-custom">
+                            <option value="Out of Stock">❌ Out of Stock</option>
+                            <option value="Low Stock">⚠️ Low Stock</option>
+                            <option value="Very Low">📉 Very Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حركة البيع (Sales Movement)</label>
+                        <select id="prod-sale-speed" class="select-custom">
+                            <option value="Fast Moving">🔥 Fast Moving</option>
+                            <option value="Mid Moving">⚡ Mid Moving</option>
+                            <option value="Slow Moving">❄️ Slow Moving</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 5px;">
+                    <label>المجموعة التصنيفية والبيعية</label>
+                    <select id="prod-cat" class="select-custom">
+                        <option value="أدوية عامة">أدوية عامة</option>
+                        <option value="تجميل">تجميل</option>
+                        <option value="كوزموسوتيكال">كوزموسوتيكال</option>
+                        <option value="العناية بالطفل">العناية بالطفل</option>
+                        <option value="المستلزمات الطبية">المستلزمات الطبية</option>
+                        <option value="الأجهزة الطبية">الأجهزة الطبية</option>
+                    </select>
+                </div>
+                
+                <button class="btn-add" onclick="addItem()">إدراج وحفظ في السحابة للفرع المحدد ☁️+</button>
+            </div>
+
+            <div class="card">
+                <h2>قائمة شورتات الفرع الحالية المكتشفة</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="num" id="stat-total">0</span>
+                        <span class="lbl">إجمالي نواقص الفرع</span>
+                    </div>
+                    <div class="stat-box" style="border-color: #a7f3d0; background: #f0fdf4;">
+                        <span class="num" id="stat-fast" style="color: #15803d;">0</span>
+                        <span class="lbl">Fast Moving 🔥</span>
+                    </div>
+                    <div class="stat-box" style="border-color: #fca5a5; background: #fff5f5;">
+                        <span class="num" id="stat-empty" style="color: #b91c1c;">0</span>
+                        <span class="lbl">Out of Stock ❌</span>
+                    </div>
+                </div>
+
+                <div class="filter-container">
+                    <button class="filter-btn active" onclick="filterItems('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterItems('Fast Moving', this)">🔥 Fast Moving</button>
+                    <button class="filter-btn" onclick="filterItems('Out of Stock', this)">❌ Out of Stock</button>
+                    <button class="filter-btn" onclick="filterItems('أدوية عامة', this)">💊 General Medicine</button>
+                    <button class="filter-btn" onclick="filterItems('تجميل', this)">💄 Cosmetics</button>
+                    <button class="filter-btn" onclick="filterItems('كوزموسوتيكال', this)">🧪 Cosmeceuticals</button>
+                    <button class="filter-btn" onclick="filterItems('العناية بالطفل', this)">👶 Baby Care</button>
+                    <button class="filter-btn" onclick="filterItems('المستلزمات الطبية', this)">🩹 Medical Supplies</button>
+                    <button class="filter-btn" onclick="filterItems('الأجهزة الطبية', this)">🩺 Medical Devices</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم الصنف</th>
+                                <th>الكمية</th>
+                                <th>حركة البيع</th>
+                                <th>حالة المخزون</th>
+                                <th>الباركود</th>
+                                <th>المجموعة</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table">
+                            <!-- الأصناف تظهر هنا تلقائياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-column">
+            <div class="card" style="position: sticky; top: 10px;">
+                <h2>مسودة طلبيّة الفرع الجاهزة</h2>
+                <textarea id="order-text" readonly placeholder="ستظهر الأصناف هنا تلقائياً..."></textarea>
+                <button class="btn-action" onclick="copyOrderText()">نسخ جدول الفرع للواتساب 📋</button>
+                <button class="btn-action btn-clear" onclick="clearAllItems()">تصفية وإفراغ قائمة هذا الفرع بالكامل 🗑️</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    جميع الحقوق محفوظة © د. كريم الألفي | Powered by <span>Dr. Karim Elalfi</span>
+    <div class="sys-compatibility">
+        <span>النظام متوافق مع:</span>
+        <div class="sys-badge">Linux Mint 🐧</div>
+        <div class="sys-badge">Windows 💻</div>
+        <div class="sys-badge">Android 🤖</div>
+        <div class="sys-badge">iOS & macOS 🍏</div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://farabi7shorts-719f.restdb.io/rest/shorts";
+    const API_KEY = "65f2cb0681534032d8479901"; 
+
+    let allCloudItems = []; 
+    let missingItems = [];  
+    let currentFilter = 'all';
+
+    function showLoading(show) {
+        document.getElementById('loading').style.display = show ? 'flex' : 'none';
+    }
+
+    let activeBranch = localStorage.getItem('farabi_active_branch') || 'صيدلية الفارابي 7';
+    document.getElementById('current-branch-hd').value = activeBranch;
+    document.getElementById('form-branch-title').innerText = activeBranch;
+
+    async function loadItemsFromCloud() {
+        showLoading(true);
+        try {
+            const response = await fetch(API_URL, {
+                method: "GET",
+                headers: {
+                    "cache-control": "no-cache",
+                    "x-apikey": API_KEY,
+                    "content-type": "application/json"
+                }
+            });
+            allCloudItems = await response.json();
+            missingItems = allCloudItems.filter(item => item.branch === activeBranch);
+            updateUI(true);
+        } catch (error) {
+            console.error("خطأ في جلب البيانات:", error);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function switchBranch() {
+        activeBranch = document.getElementById('current-branch-hd').value;
+        localStorage.setItem('farabi_active_branch', activeBranch);
+        document.getElementById('form-branch-title').innerText = activeBranch;
+        missingItems = allCloudItems.filter(item => item.branch === activeBranch);
+        updateUI(true);
+    }
+
+    function calculateStats() {
+        document.getElementById('stat-total').innerText = missingItems.length;
+        document.getElementById('stat-fast').innerText = missingItems.filter(i => i.speed === 'Fast Moving').length;
+        document.getElementById('stat-empty').innerText = missingItems.filter(i => i.status === 'Out of Stock').length;
+    }
+
+    function filterItems(filterValue, buttonEl) {
+        currentFilter = filterValue;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        buttonEl.classList.add('active');
+        updateUI(false); 
+    }
+
+    function updateUI(updateTextDraft) {
+        const tableBody = document.getElementById('inventory-table');
+        const textArea = document.getElementById('order-text');
+        
+        tableBody.innerHTML = '';
+        calculateStats();
+
+        if (updateTextDraft) {
+            if (missingItems.length === 0) {
+                textArea.value = "";
+            } else {
+                let textDraft = "📋 *تقرير نواقص " + activeBranch + "*\n" +
+                                "✍️ *إعداد:* د. كريم الألفي\n" +
+                                "📅 *التاريخ:* " + new Date().toLocaleDateString('ar-EG') + "\n" +
+                                "==============================\n" +
+                                "*Item* | *Qty* | *Stock* | *Category*\n" +
+                                "------------------------------\n";
+                
+                missingItems.forEach(item => {
+                    textDraft += "▪️ " + item.name + " | " + item.qty + " | " + item.status + " | " + item.category + "\n";
+                });
+                
+                textDraft += "==============================";
+                textArea.value = textDraft;
+            }
+        }
+
+        let filtered = missingItems;
+        if (currentFilter !== 'all') {
+            filtered = missingItems.filter(item => item.speed === currentFilter || item.status === currentFilter || item.category === currentFilter);
+        }
+
+        if (filtered.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding: 20px;">No shortages match the current filter for this branch.</td></tr>';
+            return;
+        }
+
+        filtered.forEach(item => {
+            let statusClass = 'status-danger';
+            if (item.status === 'Low Stock') statusClass = 'status-warning';
+            if (item.status === 'Very Low') statusClass = 'status-info';
+
+            let saleClass = 'sale-fast';
+            if (item.speed === 'Mid Moving') saleClass = 'sale-mid';
+            if (item.speed === 'Slow Moving') saleClass = 'sale-slow';
+
+            tableBody.innerHTML += '<tr>' +
+                '<td style="font-weight:600; color:#0f172a;">' + item.name + '</td>' +
+                '<td><span class="qty-badge">' + item.qty + '</span></td>' +
+                '<td><span class="sale-badge ' + saleClass + '">' + item.speed + '</span></td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + item.status + '</span></td>' +
+                '<td class="barcode-text">' + (item.barcode || '---') + '</td>' +
+                '<td><span style="font-size:12px; color:#475569; font-weight:600;">' + item.category + '</span></td>' +
+                '<td><button class="btn-delete" onclick="removeItem(\'' + item._id + '\')">حذف</button></td>' +
+                '</tr>';
+        });
+    }
+
+    async function addItem() {
+        const nameInput = document.getElementById('prod-name');
+        const qtyInput = document.getElementById('prod-qty');
+        const barcodeInput = document.getElementById('prod-barcode');
+        const catSelect = document.getElementById('prod-cat');
+        const statusSelect = document.getElementById('prod-status');
+        const speedSelect = document.getElementById('prod-sale-speed');
+
+        if (!nameInput.value.trim()) {
+            alert('يرجى إدخال اسم الصنف أولاً!');
+            return;
+        }
+
+        const itemData = {
+            branch: activeBranch, 
+            name: nameInput.value.trim(),
+            qty: parseInt(qtyInput.value) || 1,
+            barcode: barcodeInput.value.trim(),
+            category: catSelect.value,
+            status: statusSelect.value,
+            speed: speedSelect.value
+        };
+
+        showLoading(true);
+        try {
+            await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "x-apikey": API_KEY,
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify(itemData)
+            });
+            nameInput.value = '';
+            qtyInput.value = '1';
+            barcodeInput.value = '';
+            await loadItemsFromCloud();
+        } catch (error) {
+            alert("فشل الحفظ سحابياً!");
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function removeItem(id) {
+        showLoading(true);
+        try {
+            await fetch(`${API_URL}/${id}`, {
+                method: "DELETE",
+                headers: { "x-apikey": API_KEY }
+            });
+            await loadItemsFromCloud();
+        } catch (error) {
+            alert("فشل حذف العنصر سحابياً!");
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function clearAllItems() {
+        if(!confirm('هل أنت متأكد من مسح قائمة ' + activeBranch + ' بالكامل سحابياً؟')) return;
+        showLoading(true);
+        try {
+            for (let item of missingItems) {
+                await fetch(`${API_URL}/${item._id}`, {
+                    method: "DELETE",
+                    headers: { "x-apikey": API_KEY }
+                });
+            }
+            await loadItemsFromCloud();
+        } catch (error) {
+            alert("حدث خطأ أثناء تصفية الفرع!");
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function copyOrderText() {
+        const textArea = document.getElementById('order-text');
+        if(!textArea.value) { alert('المسودة فارغة تماماً!'); return; }
+        navigator.clipboard.writeText(textArea.value).then(() => {
+            alert('تم نسخ جدول طلبيّة ' + activeBranch + ' بنجاح!');
+        }).catch(() => {
+            textArea.select();
+            document.execCommand('copy');
+            alert('تم نسخ الجدول بنجاح!');
+        });
+    }
+
+    /**
+     * 🌐 دالة ربط آلية ومفتوحة جاهزة لأنظمة الـ POS مستقبلاً 
+     */
+    async function POS_RegisterShortage(posBranch, posItemName, posQty, posBarcode, posCategory, posStatus, posSpeed) {
+        console.log("إشارة مستلمة تلقائياً من نظام الـ POS...");
+        const posPayload = {
+            branch: posBranch || "صيدلية الفارابي 7",
+            name: posItemName,
+            qty: parseInt(posQty) || 1,
+            barcode: posBarcode || "",
+            category: posCategory || "أدوية عامة",
+            status: posStatus || "Out of Stock",
+            speed: posSpeed || "Fast Moving"
+        };
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "x-apikey": API_KEY, "content-type": "application/json" },
+                body: JSON.stringify(posPayload)
+            });
+            if(res.ok) {
+                console.log("تم تسجيل الصنف الممرر من الـ POS بنجاح!");
+                if(posBranch === activeBranch) { loadItemsFromCloud(); }
+                return true;
+            }
+        } catch(e) { console.error("فشل نظام الـ POS في التسجيل السحابي:", e); }
+        return false;
+    }
+
+    setInterval(loadItemsFromCloud, 60000);
+    window.onload = loadItemsFromCloud;
+</script>
+
+</body>
+</html>
